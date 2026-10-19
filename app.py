@@ -1,260 +1,310 @@
-import os
 import streamlit as st
-from supabase import create_client
+import os
+from supabase import create_client, Client
 from dotenv import load_dotenv
 
-# --- 1. إعدادات الصفحة والتصميم العام ---
+# 1. إعدادات الصفحة الأساسية
 st.set_page_config(
-    page_title="Company HR Hub - المنصة المركزية الإدارية",
+    page_title="Company HR Hub - Executive Portal",
     page_icon="🏢",
-    layout="centered"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# حقن أكواد CSS لتصميم أزرق مؤسساتي فاخر ومتناسق
-st.markdown("""
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
-        
-        html, body, [class*="css"] {
-            font-family: 'Cairo', sans-serif;
-            direction: rtl;
-            text-align: right;
-            background-color: #f8fafc;
-        }
-        
-        /* تخصيص الأزرار باللون الأزرق الاحترافي */
-        .stButton > button {
-            border-radius: 8px;
-            font-weight: 600;
-            background-color: #2563eb;
-            color: #ffffff;
-            border: none;
-            padding: 0.6rem 1rem;
-            box-shadow: 0 1px 2px 0 rgba(37, 99, 235, 0.2);
-            transition: all 0.2s ease;
-        }
-        .stButton > button:hover {
-            background-color: #1d4ed8;
-            color: #ffffff;
-        }
-        
-        /* تنسيق الهيدر */
-        .main-header {
-            text-align: center;
-            padding: 15px 0 10px 0;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# --- 2. الاتصال بـ Supabase ---
+# 2. تحميل المتغيرات السرية بشكل آمن محلياً وعلى السحابة
 load_dotenv()
-
-url = os.getenv("SUPABASE_URL")
-key = os.getenv("SUPABASE_KEY")
-
-if not url or not key:
-    st.error("⚠️ خطأ في الإعدادات: يرجى التأكد من ملف البيئة .env")
-    st.stop()
-
 try:
-    supabase = create_client(url, key)
-except Exception as e:
-    st.error(f"❌ تعذر الاتصال بقاعدة البيانات: {e}")
+    SUPABASE_URL = st.secrets.get("SUPABASE_URL") or os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = st.secrets.get("SUPABASE_KEY") or os.getenv("SUPABASE_KEY")
+except Exception:
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    st.error("⚠️ لم يتم العثور على مفاتيح الاتصال بقاعدة البيانات. يرجى ضبط Secrets في إعدادات المنصة.")
     st.stop()
 
-# --- 3. الهيدر الرسمي الاحترافي ---
+# الاتصال بقاعدة بيانات Supabase
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# 3. أنماط التصميم المؤسسي وتوجيه المحتوى باللغة العربية (RTL) بشكل منظم
 st.markdown("""
-    <div class='main-header'>
-        <h2 style='color: #1e3a8a; font-weight: 700; margin-bottom: 4px;'>Company HR Hub</h2>
-        <p style='color: #64748b; font-size: 14px; margin: 0;'>المنصة المركزية الموحدة للتحقق وإدارة سجلات الموظفين بين الفروع</p>
-    </div>
-    <hr style='margin: 15px 0 25px 0; border-color: #e2e8f0;'>
+<style>
+    /* توجيه عام لليمين */
+    .stApp {
+        direction: rtl;
+        text-align: right;
+    }
+    .main {
+        background-color: #f8fafc;
+    }
+    /* تنسيق الأزرار */
+    .stButton>button {
+        border-radius: 8px;
+        height: 2.8em;
+        background-color: #2563eb;
+        color: white;
+        font-weight: 600;
+        border: none;
+        width: 100%;
+    }
+    .stButton>button:hover {
+        background-color: #1d4ed8;
+        color: white;
+    }
+    /* ضمان محاذاة النصوص يميناً */
+    h1, h2, h3, h4, h5, h6, p, label, span, div {
+        text-align: right !important;
+    }
+    /* بطاقات الموظفين الاحترافية */
+    .employee-card {
+        background-color: white;
+        padding: 22px;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        margin-bottom: 18px;
+        border-right: 6px solid #2563eb;
+        border-left: 1px solid #e2e8f0;
+        border-top: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+        direction: rtl;
+    }
+    /* تنسيق التبويبات لتعمل بشكل صحيح مع العربية */
+    .stTabs [data-baseweb="tab-list"] {
+        direction: rtl;
+        justify-content: flex-start;
+    }
+</style>
 """, unsafe_allow_html=True)
 
-# --- 4. شاشة تسجيل الدخول ---
-if "user_role" not in st.session_state:
-    col1, col2, col3 = st.columns([1, 1.4, 1])
+# 4. إدارة حالة الجلسة (Session State)
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "user_email" not in st.session_state:
+    st.session_state.user_email = ""
+
+# 5. واجهة تسجيل الدخول المؤسسية
+if not st.session_state.logged_in:
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        with st.container(border=True):
-            st.markdown("<h4 style='text-align: center; color: #1e3a8a; font-size: 16px; margin-bottom: 15px;'>تسجيل دخول الإدارة</h4>", unsafe_allow_html=True)
-            
+        st.markdown("<h2 style='text-align: center; color: #1e3a8a;'>Company HR Hub</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #64748b;'>المنصة المركزية الموحدة لإدارة الموظفين والتدقيق بين الفروع</p>", unsafe_allow_html=True)
+        
+        with st.form("login_form"):
+            st.subheader("تسجيل دخول الإدارة")
             email = st.text_input("البريد الإلكتروني للإدارة")
             password = st.text_input("كلمة المرور", type="password")
+            submit = st.form_submit_button("تسجيل الدخول الآمن")
             
-            st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
-            
-            if st.button("تسجيل الدخول", use_container_width=True):
-                if not email.strip() or not password:
-                    st.warning("يرجى إدخال البريد الإلكتروني وكلمة المرور.")
-                else:
+            if submit:
+                if email and password:
                     try:
-                        response = supabase.auth.sign_in_with_password({
-                            "email": email.strip(),
+                        auth_response = supabase.auth.sign_in_with_password({
+                            "email": email,
                             "password": password
                         })
+                        st.session_state.logged_in = True
+                        st.session_state.user_email = email
+                        st.rerun()
+                    except Exception as e:
+                        st.error("خطأ في بيانات الدخول. يرجى التأكد من البريد أو كلمة المرور.")
+                else:
+                    st.warning("يرجى ملء جميع الحقول المطلوبة.")
+    st.stop()
 
-                        if response.user:
-                            user_email = email.strip().lower()
-                            if "owner" in user_email or "director" in user_email or "admin" in user_email or "general" in user_email:
-                                st.session_state["user_role"] = "المدير العام"
-                            elif "oran" in user_email:
-                                st.session_state["user_role"] = "وهران"
-                            elif "eulma" in user_email:
-                                st.session_state["user_role"] = "العلمة"
-                            else:
-                                st.session_state["user_role"] = "مدير معتمد"
-                            st.rerun()
+# 6. تحديد دور المستخدم
+user_email = st.session_state.user_email.lower()
+is_owner = any(keyword in user_email for keyword in ["owner", "director", "admin", "general"])
 
-                    except Exception:
-                        st.error("❌ بيانات الدخول غير صحيحة.")
+# شريط التنقل العلوي
+col_user, col_logout = st.columns([5, 1])
+with col_user:
+    st.markdown(f"👤 مسجل الدخول كـ: **{st.session_state.user_email}**")
+with col_logout:
+    if st.button("خروج"):
+        st.session_state.logged_in = False
+        st.session_state.user_email = ""
+        st.rerun()
 
-# --- 5. لوحة التحكم بعد تسجيل الدخول ---
-if "user_role" in st.session_state:
-    current_role = st.session_state["user_role"]
-    
-    # شريط الحالة العلوي
-    col_status, col_logout = st.columns([3, 1])
-    with col_status:
-        if current_role == "المدير العام":
-            status_text = "المدير العام (إشراف ومتابعة شاملة)"
-        else:
-            status_text = f"مدير فرع {current_role}"
-            
-        st.markdown(f"<div style='background-color: #eff6ff; padding: 10px 15px; border-radius: 8px; color: #1e40af; font-size: 13px; border-right: 4px solid #2563eb;'>النظام النشط: <b>{status_text}</b></div>", unsafe_allow_html=True)
-    with col_logout:
-        if st.button("تسجيل الخروج", use_container_width=True):
-            del st.session_state["user_role"]
-            st.rerun()
+st.markdown("---")
 
-    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+# 7. لوحة تحكم المدير العام الاحترافية (Executive Portal)
+if is_owner:
+    st.title("📊 لوحة التحكم القيادية التنفيذية")
+    st.write("إدارة مركزية متكاملة ومتابعة حية لسجلات الفروع وصلاحيات الإشراف.")
 
-    # --- واجهة المدير العام (إشراف وتقارير شاملة) ---
-    if current_role == "المدير العام":
-        with st.container(border=True):
-            st.subheader("📊 لوحة متابعة الإدارة العليا (السجل المركزي العام)")
-            st.write("مرحباً بك. تتيح لك هذه اللوحة تتبع جميع السجلات والقرارات الإدارية الموثقة عبر كافة فروع الشركة.")
+    try:
+        res = supabase.table("employees").select("*").execute()
+        employees = res.data if res.data else []
+        
+        oran_count = 0
+        eulma_count = 0
+        for e in employees:
+            note_text = str(e.get("notes") or "")
+            if "وهران" in note_text or "oran" in note_text.lower():
+                oran_count += 1
+            elif "العلمة" in note_text or "eulma" in note_text.lower():
+                eulma_count += 1
 
-            try:
-                res = supabase.table("employees").select("*").order("id", desc=True).execute()
-                all_records = res.data
+        # عرض مؤشرات الأداء الإدارية
+        m1, m2, m3 = st.columns(3)
+        m1.metric("إجمالي السجلات المركزية", len(employees))
+        m2.metric("سجلات فرع وهران", oran_count)
+        m3.metric("سجلات فرع العلمة", eulma_count)
+        
+        st.markdown("---")
 
-                total_count = len(all_records)
-                oran_count = sum(1 for r in all_records if "وهران" in str(r.get('notes', '')))
-                eulma_count = sum(1 for r in all_records if "العلمة" in str(r.get('notes', '')))
+        # تنظيم واجهة المدير في تبويبات احترافية
+        exec_tab1, exec_tab2, exec_tab3 = st.tabs([
+            "📑 التدقيق المركزي للسجلات", 
+            "🔍 بحث متقدم في الشبكة", 
+            "⚙️ لوحة الإشراف والحذف الآمن"
+        ])
 
-                col_st1, col_st2, col_st3 = st.columns(3)
-                with col_st1:
-                    st.metric("إجمالي السجلات المركزية", total_count)
-                with col_st2:
-                    st.metric("سجلات فرع وهران", oran_count)
-                with col_st3:
-                    st.metric("سجلات فرع العلمة", eulma_count)
+        # التبويب الأول: التدقيق المركزي ببطاقات أنيقة ومنظمة
+        with exec_tab1:
+            st.subheader("سجلات الموظفين المسجلة عبر كافة الفروع")
+            if employees:
+                for emp in employees:
+                    notes_val = emp.get('notes')
+                    notes_display = notes_val if notes_val else "لا توجد ملاحظات إضافية"
+                    st.markdown(f"""
+                    <div class="employee-card">
+                        <h3 style="color: #1e3a8a; margin-top: 0; margin-bottom: 10px;">👤 {emp.get('full_name', 'بدون اسم')}</h3>
+                        <p style="margin: 4px 0; color: #334155; font-size: 1rem;"><b>رقم الموظف/الهوية:</b> {emp.get('employee_number', 'غير متوفر')}</p>
+                        <p style="margin: 4px 0; color: #334155; font-size: 1rem;"><b>القسم:</b> {emp.get('department', 'غير محدد')} &nbsp;|&nbsp; <b>الهاتف:</b> {emp.get('phone', 'غير محدد')}</p>
+                        <hr style="margin: 8px 0; border: none; border-top: 1px solid #e2e8f0;">
+                        <p style="margin: 4px 0; color: #0f172a; background-color: #f1f5f9; padding: 10px; border-radius: 6px;"><b>تفاصيل السجل والملاحظات:</b> {notes_display}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.info("لا توجد سجلات مسجلة في النظام حتى الآن.")
 
-                st.markdown("<hr style='margin: 20px 0; border-color: #e2e8f0;'>", unsafe_allow_html=True)
-                st.subheader("📋 كافة السجلات والقرارات المسجلة في الشركة")
-
-                if all_records:
-                    for item in all_records:
+        # التبويب الثاني: البحث المتقدم
+        with exec_tab2:
+            st.subheader("البحث الشامل في قاعدة البيانات")
+            exec_search = st.text_input("ابحث بالاسم أو رقم الموظف أو الفرع:")
+            if exec_search:
+                res_s1 = supabase.table("employees").select("*").ilike("full_name", f"%{exec_search}%").execute()
+                res_s2 = supabase.table("employees").select("*").ilike("employee_number", f"%{exec_search}%").execute()
+                res_s3 = supabase.table("employees").select("*").ilike("notes", f"%{exec_search}%").execute()
+                
+                merged_res = {e['id']: e for e in ((res_s1.data or []) + (res_s2.data or []) + (res_s3.data or []))}
+                found_list = list(merged_res.values())
+                
+                if found_list:
+                    st.success(f"تم العثور على {len(found_list)} نتيجة مطابقة:")
+                    for emp in found_list:
+                        notes_val = emp.get('notes')
+                        notes_display = notes_val if notes_val else "لا توجد ملاحظات"
                         st.markdown(f"""
-                            <div style='background-color: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; margin-top: 10px; font-size: 14px;'>
-                                <div style='display: flex; justify-content: space-between; margin-bottom: 6px;'>
-                                    <span><b>الاسم الكامل:</b> {item.get('full_name')}</span>
-                                    <span><b>رقم التعريف:</b> {item.get('employee_number')}</span>
-                                </div>
-                                <div style='margin-bottom: 6px;'><b>القسم:</b> {item.get('department')} | <b>الهاتف:</b> {item.get('phone')}</div>
-                                <div style='color: #1e3a8a; font-weight: 600; background-color: #eff6ff; padding: 8px; border-radius: 4px; margin-top: 6px;'>
-                                    {item.get('notes')}
-                                </div>
-                            </div>
+                        <div class="employee-card">
+                            <h3 style="color: #1e3a8a; margin-top: 0; margin-bottom: 10px;">👤 {emp.get('full_name')}</h3>
+                            <p style="margin: 4px 0; color: #334155;"><b>رقم الموظف:</b> {emp.get('employee_number')}</p>
+                            <p style="margin: 4px 0; color: #334155;"><b>القسم:</b> {emp.get('department', 'غير محدد')} | <b>الهاتف:</b> {emp.get('phone', 'غير محدد')}</p>
+                            <p style="margin: 4px 0; color: #0f172a; background-color: #f1f5f9; padding: 10px; border-radius: 6px;"><b>الملاحظات:</b> {notes_display}</p>
+                        </div>
                         """, unsafe_allow_html=True)
                 else:
-                    st.info("لا توجد أي سجلات موثقة حتى الآن في النظام.")
+                    st.info("لا توجد نتائج مطابقة لبحثك.")
 
-            except Exception as e:
-                st.error(f"تعذر جلب البيانات: {e}")
-
-    # --- واجهة مدراء الفروع (بحث + توثيق) ---
-    else:
-        tab_search, tab_add = st.tabs(["🔍 محرك التحقق والبحث", "➕ تسجيل موظف أو قرار جديد"])
-
-        with tab_search:
-            with st.container(border=True):
-                st.subheader("التحقق من سجلات المتقدمين")
-                st.write("أدخل رقم الهوية أو الاسم الكامل للتحقق من وجود أي سجل إداري سابق:")
-
-                search_query = st.text_input("بحث برقم الهوية أو الاسم...", key="search_input_box")
-
-                if st.button("بحث في السجلات", use_container_width=True):
-                    if search_query.strip():
+        # التبويب الثالث: لوحة الإشراف والحذف الآمن
+        with exec_tab3:
+            st.subheader("إدارة وحذف السجلات الخاطئة أو التجريبية")
+            st.warning("⚠️ تنبيه إداري: عملية الحذف نهائية ولا يمكن التراجع عنها.")
+            
+            if employees:
+                emp_choices = {
+                    f"الاسم: {e.get('full_name', 'بدون اسم')} | الرقم: {e.get('employee_number', 'غ/م')} | الملاحظات: {e.get('notes', 'بدون')}": e.get('id')
+                    for e in employees
+                }
+                
+                selected_label = st.selectbox("اختر السجل المراد إدارته وحذفه:", options=list(emp_choices.keys()))
+                
+                col_del1, col_del2 = st.columns([1, 3])
+                with col_del1:
+                    confirm_delete = st.checkbox("تأكيد صلاحية الحذف")
+                
+                if confirm_delete:
+                    if st.button("🗑️ حذف السجل نهائياً من النظام", type="primary"):
+                        target_id = emp_choices[selected_label]
                         try:
-                            res = supabase.table("employees").select("*").or_(
-                                f"employee_number.eq.{search_query.strip()},full_name.ilike.%{search_query.strip()}%"
-                            ).execute()
+                            supabase.table("employees").delete().eq("id", target_id).execute()
+                            st.success("تم حذف السجل بنجاح وتحديث القاعدة المركزية!")
+                            st.rerun()
+                        except Exception as del_err:
+                            st.error(f"حدث خطأ أثناء الحذف: {del_err}")
+                else:
+                    st.info("يرجى تحديد مربع 'تأكيد صلاحية الحذف' لتفعيل زر الحذف الآمن.")
+            else:
+                st.info("لا توجد سجلات متاحة للإدارة أو الحذف.")
 
-                            records = res.data
-                            if records:
-                                st.markdown(f"<div style='background-color: #eff6ff; border: 1px solid #bfdbfe; border-right: 4px solid #2563eb; padding: 12px 15px; border-radius: 6px; margin-top: 15px; color: #1e40af; font-size: 14px;'>"
-                                            f"📋 <b>تنبيه إداري:</b> تم العثور على ({len(records)}) سجل سابق مرتبط بهذا المتقدم."
-                                            f"</div>", unsafe_allow_html=True)
-                                
-                                for item in records:
-                                    st.markdown(f"""
-                                        <div style='background-color: #ffffff; color: #0f172a; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-top: 12px; font-size: 14px;'>
-                                            <div style='margin-bottom: 8px;'><span style='color: #64748b; margin-left: 8px;'>الاسم الكامل:</span> <b>{item.get('full_name')}</b></div>
-                                            <div style='margin-bottom: 8px;'><span style='color: #64748b; margin-left: 8px;'>رقم التعريف:</span> <b>{item.get('employee_number')}</b></div>
-                                            <div style='margin-bottom: 8px;'><span style='color: #64748b; margin-left: 8px;'>القسم السابق:</span> {item.get('department')}</div>
-                                            <div style='margin-bottom: 8px;'><span style='color: #64748b; margin-left: 8px;'>رقم الهاتف:</span> {item.get('phone')}</div>
-                                            <hr style='margin: 10px 0; border-top: 1px solid #f1f5f9;'>
-                                            <div><span style='color: #64748b;'>تفاصيل القرار الإداري / الملاحظات:</span></div>
-                                            <div style='color: #1e3a8a; font-weight: 600; margin-top: 4px; background-color: #f8fafc; padding: 8px; border-radius: 4px;'>{item.get('notes')}</div>
-                                        </div>
-                                    """, unsafe_allow_html=True)
-                                
-                                st.markdown("<div style='margin-top: 12px; font-size: 12px; color: #64748b;'>ملاحظة: هذا السجل للاسترشاد الداخلي، والقرار النهائي بقبول أو رفض التوظيف يرجع لتقدير مدير الفرع.</div>", unsafe_allow_html=True)
-                            else:
-                                st.markdown(f"<div style='background-color: #f0fdf4; border: 1px solid #bbf7d0; border-right: 4px solid #16a34a; padding: 12px 15px; border-radius: 6px; margin-top: 15px; color: #166534; font-size: 14px;'>"
-                                            f"✅ <b>السجل نظيف:</b> لم يتم العثور على أي موانع أو قرارات سابقة لهذا المتقدم في النظام."
-                                            f"</div>", unsafe_allow_html=True)
-                        except Exception as e:
-                            st.error(f"حدث خطأ أثناء الاتصال: {e}")
-                    else:
-                        st.warning("الرجاء إدخال اسم أو رقم للبحث.")
+    except Exception as e:
+        st.error(f"حدث خطأ أثناء الاتصال بقاعدة البيانات: {e}")
 
-        with tab_add:
-            with st.container(border=True):
-                st.subheader("توثيق سجل موظف جديد")
-                st.write("أدخل بيانات العامل بدقة لإضافتها إلى قاعدة البيانات المركزية المشتركة:")
+# 8. لوحة تحكم مدراء الفروع (Branch Managers View)
+else:
+    branch_name = "وهران" if "oran" in user_email else "العلمة"
+    st.title(f"🏢 لوحة إدارة فرع {branch_name}")
+    
+    tab1, tab2 = st.tabs(["🔍 البحث والتحقق السريع", "➕ تسجيل موظف جديد"])
+    
+    with tab1:
+        st.subheader("التحقق الفوري قبل التوظيف")
+        search_term = st.text_input("أدخل الاسم الكامل أو رقم الموظف للبحث:")
+        
+        if search_term:
+            try:
+                res_name = supabase.table("employees").select("*").ilike("full_name", f"%{search_term}%").execute()
+                res_num = supabase.table("employees").select("*").ilike("employee_number", f"%{search_term}%").execute()
+                
+                results_dict = {e['id']: e for e in ((res_name.data or []) + (res_num.data or []))}
+                results = list(results_dict.values())
+                
+                if results:
+                    st.warning(f"⚠️ تنبيه: تم العثور على ({len(results)}) سجل سابـق لهذا الموظف في الشبكة المركزية:")
+                    for emp in results:
+                        notes_val = emp.get('notes')
+                        notes_display = notes_val if notes_val else "لا توجد ملاحظات"
+                        st.markdown(f"""
+                        <div class="employee-card">
+                            <h3 style="color: #1e3a8a; margin-top: 0; margin-bottom: 10px;">👤 {emp.get('full_name')}</h3>
+                            <p style="margin: 4px 0; color: #334155;"><b>رقم الموظف:</b> {emp.get('employee_number')}</p>
+                            <p style="margin: 4px 0; color: #334155;"><b>القسم:</b> {emp.get('department', 'غير محدد')} | <b>الهاتف:</b> {emp.get('phone', 'غير محدد')}</p>
+                            <p style="margin: 4px 0; color: #0f172a; background-color: #f1f5f9; padding: 10px; border-radius: 6px;"><b>تفاصيل السجل:</b> {notes_display}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                else:
+                    st.success("✅ نظيف: لم يتم العثور على أي سجلات سابقة لهذا الموظف.")
+            except Exception as e:
+                st.error(f"حدث خطأ أثناء البحث: {e}")
 
-                with st.form("employee_form_pro", clear_on_submit=True):
-                    col_f1, col_f2 = st.columns(2)
-                    with col_f1:
-                        full_name = st.text_input("الاسم الكامل للموظف")
-                        department = st.text_input("القسم أو المنصب الوظيفي")
-                    with col_f2:
-                        employee_id = st.text_input("رقم الموظف / رقم التعريف الوطنية")
-                        phone = st.text_input("رقم الهاتف")
-                    
-                    notes = st.text_area("تفاصيل القرار الإداري / سبب إنهاء الخدمة")
-
-                    st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
-                    submitted = st.form_submit_button("حفظ في السجل المركزي", use_container_width=True)
-
-                    if submitted:
-                        if full_name.strip() and employee_id.strip():
-                            try:
-                                branch_note = f"فرع {current_role}: {notes.strip() if notes.strip() else 'تم الإنهاء دون ملاحظات إضافية'}"
-
-                                supabase.table("employees").insert({
-                                    "full_name": full_name.strip(),
-                                    "employee_number": employee_id.strip(),
-                                    "department": department.strip(),
-                                    "phone": phone.strip(),
-                                    "notes": branch_note
-                                }).execute()
-
-                                st.success(f"تم حفظ وتوثيق سجل الموظف ({full_name}) بنجاح.")
-
-                            except Exception as e:
-                                st.error(f"تعذر الحفظ. الخطأ: {e}")
-                        else:
-                            st.warning("⚠️ يرجى إدخال الاسم الكامل ورقم التعريف على الأقل.")
+    with tab2:
+        st.subheader(f"تسجيل بيانات موظف جديد - فرع {branch_name}")
+        with st.form("add_employee_form"):
+            full_name = st.text_input("الاسم الكامل للموظف *")
+            emp_number = st.text_input("رقم الموظف/الهوية *")
+            department = st.text_input("القسم/الوظيفة")
+            phone = st.text_input("رقم الهاتف")
+            notes = st.text_area("سبب مغادرة العمل أو ملاحظات إدارية هامة")
+            
+            submit_emp = st.form_submit_button("حفظ السجل في قاعدة البيانات المركزية")
+            
+            if submit_emp:
+                if full_name and emp_number:
+                    try:
+                        full_notes = f"[{branch_name}] {notes}" if notes else f"[{branch_name}]"
+                        data = {
+                            "full_name": full_name,
+                            "employee_number": emp_number,
+                            "department": department,
+                            "phone": phone,
+                            "notes": full_notes
+                        }
+                        supabase.table("employees").insert(data).execute()
+                        st.success("تم إضافة السجل بنجاح وإتاحته للشبكة المركزية الفورية!")
+                    except Exception as e:
+                        st.error(f"حدث خطأ أثناء حفظ البيانات: {e}")
+                else:
+                    st.warning("يرجى إدخال الاسم ورقم الموظف على الأقل.")
