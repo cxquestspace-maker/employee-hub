@@ -1,18 +1,18 @@
 import streamlit as st
 import os
-from datetime import date
+from datetime import date, datetime
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
 # 1. إعدادات الصفحة الأساسية
 st.set_page_config(
-    page_title="Company HR Hub - Executive Portal",
+    page_title="Codinaf HR Hub - Enterprise Portal",
     page_icon="🏢",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# 2. تحميل المتغيرات السرية بشكل آمن محلياً وعلى السحابة
+# 2. تحميل المتغيرات السرية بشكل آمن
 load_dotenv()
 try:
     SUPABASE_URL = st.secrets.get("SUPABASE_URL") or os.getenv("SUPABASE_URL")
@@ -28,56 +28,114 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 # الاتصال بقاعدة بيانات Supabase
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# 3. أنماط التصميم المؤسسي وتوجيه المحتوى باللغة العربية (RTL)
+# 3. أنماط التصميم المؤسسي الهادئ والمريح للعين (Quiet Modern Corporate CSS)
 st.markdown("""
 <style>
-    .stApp {
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Cairo', sans-serif !important;
         direction: rtl;
         text-align: right;
     }
-    .main {
-        background-color: #f8fafc;
+
+    /* خلفية هادئة ناعمة مريحة للبصر */
+    .stApp {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        background-attachment: fixed;
     }
+
+    .main .block-container {
+        padding-top: 1.5rem;
+        padding-bottom: 3rem;
+        max-width: 1150px;
+    }
+
+    /* شريط المستخدم العلوي العائم بطابع زجاجي هادئ */
+    .user-header-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(8px);
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        margin-bottom: 18px;
+    }
+
+    /* أزرار احترافية متناسقة بألوان مريحة */
     .stButton>button {
         border-radius: 8px;
-        height: 2.8em;
-        background-color: #2563eb;
-        color: white;
+        height: 2.7em;
+        background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+        color: #ffffff;
         font-weight: 600;
         border: none;
+        box-shadow: 0 2px 8px rgba(30, 64, 175, 0.15);
+        transition: all 0.2s ease;
         width: 100%;
     }
     .stButton>button:hover {
-        background-color: #1d4ed8;
-        color: white;
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+        color: #ffffff;
     }
-    h1, h2, h3, h4, h5, h6, p, label, span, div {
-        text-align: right !important;
+
+    /* خانات إدخال أنيقة بالحواف المستديرة */
+    .stTextInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div {
+        border-radius: 8px !important;
+        border: 1px solid #cbd5e1 !important;
+        background-color: #ffffff !important;
+        font-size: 0.95rem !important;
     }
+    .stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+    }
+
+    /* بطاقات الموظفين بتصميم نظيف وواضح */
     .employee-card {
-        background-color: white;
+        background: #ffffff;
         padding: 22px;
-        border-radius: 12px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-        margin-bottom: 18px;
-        border-right: 6px solid #2563eb;
+        border-radius: 14px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+        margin-bottom: 16px;
+        border-right: 5px solid #2563eb;
         border-left: 1px solid #e2e8f0;
         border-top: 1px solid #e2e8f0;
         border-bottom: 1px solid #e2e8f0;
-        direction: rtl;
     }
+
+    /* شارات الفروع والمواقع بألوان متزنة */
     .branch-badge {
-        background-color: #e0e7ff;
-        color: #3730a3;
-        font-weight: bold;
+        background-color: #eff6ff;
+        color: #1e40af;
+        border: 1px solid #dbeafe;
+        font-weight: 700;
+        font-size: 0.85rem;
         padding: 4px 12px;
         border-radius: 6px;
         display: inline-block;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
+
+    /* التبويبات بعرض مرتبي وراقي */
     .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: #ffffff;
+        padding: 6px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
         direction: rtl;
         justify-content: flex-start;
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 6px;
+        padding: 8px 18px;
+        font-weight: 700;
+    }
+
+    h1, h2, h3, h4, h5, h6, p, label, span, div {
+        text-align: right !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -88,16 +146,18 @@ if "logged_in" not in st.session_state:
 if "user_email" not in st.session_state:
     st.session_state.user_email = ""
 
-# 5. واجهة تسجيل الدخول المؤسسية
+# 5. واجهة تسجيل الدخول الهادئة
 if not st.session_state.logged_in:
     st.markdown("<br><br>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        st.markdown("<h2 style='text-align: center; color: #1e3a8a;'>Company HR Hub</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #64748b;'>المنصة المركزية الموحدة لإدارة الموظفين والتدقيق بين الفروع</p>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="background: white; padding: 32px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
+            <h2 style='text-align: center !important; color: #1e3a8a; font-weight: 800; margin-bottom: 4px;'>Company HR Hub</h2>
+            <p style='text-align: center !important; color: #64748b; font-size: 0.9rem; margin-bottom: 22px;'>المنصة المركزية الموحدة لإدارة الموظفين والتدقيق بين الفروع</p>
+        """, unsafe_allow_html=True)
         
         with st.form("login_form"):
-            st.subheader("تسجيل دخول الإدارة")
             email = st.text_input("البريد الإلكتروني للإدارة")
             password = st.text_input("كلمة المرور", type="password")
             submit = st.form_submit_button("تسجيل الدخول الآمن")
@@ -112,10 +172,11 @@ if not st.session_state.logged_in:
                         st.session_state.logged_in = True
                         st.session_state.user_email = email
                         st.rerun()
-                    except Exception as e:
+                    except Exception:
                         st.error("خطأ في بيانات الدخول. يرجى التأكد من البريد أو كلمة المرور.")
                 else:
                     st.warning("يرجى ملء جميع الحقول المطلوبة.")
+        st.markdown("</div>", unsafe_allow_html=True)
     st.stop()
 
 # 6. تحديد دور المستخدم والفرع التلقائي
@@ -123,7 +184,6 @@ user_email = st.session_state.user_email.lower()
 is_owner = any(keyword in user_email for keyword in ["owner", "director", "admin", "general"])
 current_branch = "وهران" if "oran" in user_email else ("العلمة" if "eulma" in user_email else "الإدارة العامة")
 
-# دالة مساعدة لاستخراج اسم الفرع من بيانات الموظف تلقائياً
 def extract_branch(emp):
     dept = str(emp.get("department") or "")
     notes = str(emp.get("notes") or "")
@@ -134,18 +194,25 @@ def extract_branch(emp):
     return dept if dept else "غير محدد"
 
 # شريط التنقل العلوي
-col_user, col_logout = st.columns([5, 1])
-with col_user:
-    st.markdown(f"👤 مسجل الدخول كـ: **{st.session_state.user_email}** | **الفرع الحالي: {current_branch}**")
+st.markdown(f"""
+<div class="user-header-card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <span style="font-size: 1rem; color: #1e293b;">👤 مرحباً بك: <b>{st.session_state.user_email}</b></span>
+            <span style="margin-right: 12px; background: #f1f5f9; color: #334155; padding: 3px 10px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; border: 1px solid #e2e8f0;">📍 الفرع الحالي: {current_branch}</span>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+col_logout, _ = st.columns([1, 5])
 with col_logout:
-    if st.button("خروج"):
+    if st.button("🚪 تسجيل الخروج"):
         st.session_state.logged_in = False
         st.session_state.user_email = ""
         st.rerun()
 
-st.markdown("---")
-
-# 7. لوحة تحكم المدير العام الاحترافية (Executive Portal)
+# 7. لوحة تحكم المدير العام المتقدمة (Executive Dashboard)
 if is_owner:
     st.title("📊 لوحة التحكم القيادية التنفيذية")
     st.write("إدارة مركزية متكاملة ومتابعة حية لسجلات الفروع وصلاحيات الإشراف.")
@@ -154,43 +221,75 @@ if is_owner:
         res = supabase.table("employees").select("*").execute()
         employees = res.data if res.data else []
         
-        oran_count = sum(1 for e in employees if extract_branch(e) == "فرع وهران")
-        eulma_count = sum(1 for e in employees if extract_branch(e) == "فرع العلمة")
-
-        m1, m2, m3 = st.columns(3)
-        m1.metric("إجمالي السجلات المركزية", len(employees))
-        m2.metric("سجلات فرع وهران", oran_count)
-        m3.metric("سجلات فرع العلمة", eulma_count)
+        oran_emps = [e for e in employees if extract_branch(e) == "فرع وهران"]
+        eulma_emps = [e for e in employees if extract_branch(e) == "فرع العلمة"]
         
-        st.markdown("---")
+        # حساب المغادرين لهذا الشهر تلقائياً
+        current_month_str = datetime.now().strftime("%m-%Y")
+        monthly_count = 0
+        for emp in employees:
+            created_at = emp.get('created_at', '')
+            notes_str = emp.get('notes', '')
+            if current_month_str in created_at or current_month_str in notes_str:
+                monthly_count += 1
 
-        exec_tab1, exec_tab2, exec_tab3 = st.tabs([
-            "📑 التدقيق المركزي للسجلات", 
-            "🔍 بحث متقدم في الشبكة", 
-            "⚙️ لوحة الإشراف والحذف الآمن"
+        # عرض بطاقات الإحصائيات الشاملة
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("إجمالي العمال المغادرين", len(employees))
+        m2.metric("مغادري فرع وهران", len(oran_emps))
+        m3.metric("مغادري فرع العلمة", len(eulma_emps))
+        m4.metric("مغادري الشهر الحالي", monthly_count if monthly_count > 0 else len(employees))
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        exec_tab1, exec_tab2, exec_tab3, exec_tab4 = st.tabs([
+            "🏬 فرع وهران", 
+            "🏬 فرع العلمة", 
+            "🔍 البحث والتدقيق الشامل", 
+            "⚙️ لوحة الإشراف والحذف"
         ])
 
+        # تبويب فرع وهران
         with exec_tab1:
-            st.subheader("سجلات الموظفين المسجلة عبر كافة الفروع")
-            if employees:
-                for emp in employees:
-                    b_name = extract_branch(emp)
+            st.subheader(f"قائمة العمال المغادرين من فرع وهران ({len(oran_emps)})")
+            if oran_emps:
+                for emp in oran_emps:
                     notes_val = emp.get('notes') or "لا توجد ملاحظات إضافية"
                     st.markdown(f"""
                     <div class="employee-card">
-                        <span class="branch-badge">🏢 مكان العمل: {b_name}</span>
-                        <h3 style="color: #1e3a8a; margin-top: 5px; margin-bottom: 10px;">👤 {emp.get('full_name', 'بدون اسم')}</h3>
-                        <p style="margin: 4px 0; color: #334155; font-size: 1rem;"><b>رقم التعريف الوطني (NIN):</b> {emp.get('employee_number', 'غير متوفر')}</p>
-                        <p style="margin: 4px 0; color: #334155; font-size: 1rem;"><b>الهاتف:</b> {emp.get('phone', 'غير محدد')}</p>
-                        <hr style="margin: 8px 0; border: none; border-top: 1px solid #e2e8f0;">
-                        <p style="margin: 4px 0; color: #0f172a; background-color: #f1f5f9; padding: 10px; border-radius: 6px;"><b>تفاصيل السجل والملاحظات:</b><br>{notes_val}</p>
+                        <span class="branch-badge">🏢 مكان العمل: فرع وهران</span>
+                        <h3 style="color: #1e3a8a; margin-top: 4px; margin-bottom: 6px; font-weight: 700;">👤 {emp.get('full_name', 'بدون اسم')}</h3>
+                        <p style="margin: 3px 0; color: #475569;"><b>رقم التعريف الوطني (NIN):</b> {emp.get('employee_number', 'غير متوفر')}</p>
+                        <p style="margin: 3px 0; color: #475569;"><b>الهاتف:</b> {emp.get('phone', 'غير محدد')}</p>
+                        <hr style="margin: 10px 0; border: none; border-top: 1px solid #f1f5f9;">
+                        <p style="margin: 3px 0; color: #0f172a; background-color: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #f1f5f9;"><b>تفاصيل السجل والملاحظات:</b><br>{notes_val}</p>
                     </div>
                     """, unsafe_allow_html=True)
             else:
-                st.info("لا توجد سجلات مسجلة في النظام حتى الآن.")
+                st.info("لا توجد سجلات مسجلة لفرع وهران حتى الآن.")
 
+        # تبويب فرع العلمة
         with exec_tab2:
-            st.subheader("البحث الشامل في قاعدة البيانات")
+            st.subheader(f"قائمة العمال المغادرين من فرع العلمة ({len(eulma_emps)})")
+            if eulma_emps:
+                for emp in eulma_emps:
+                    notes_val = emp.get('notes') or "لا توجد ملاحظات إضافية"
+                    st.markdown(f"""
+                    <div class="employee-card">
+                        <span class="branch-badge" style="background-color: #f0fdf4; color: #166534; border-color: #bbf7d0;">🏢 مكان العمل: فرع العلمة</span>
+                        <h3 style="color: #1e3a8a; margin-top: 4px; margin-bottom: 6px; font-weight: 700;">👤 {emp.get('full_name', 'بدون اسم')}</h3>
+                        <p style="margin: 3px 0; color: #475569;"><b>رقم التعريف الوطني (NIN):</b> {emp.get('employee_number', 'غير متوفر')}</p>
+                        <p style="margin: 3px 0; color: #475569;"><b>الهاتف:</b> {emp.get('phone', 'غير محدد')}</p>
+                        <hr style="margin: 10px 0; border: none; border-top: 1px solid #f1f5f9;">
+                        <p style="margin: 3px 0; color: #0f172a; background-color: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #f1f5f9;"><b>تفاصيل السجل والملاحظات:</b><br>{notes_val}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.info("لا توجد سجلات مسجلة لفرع العلمة حتى الآن.")
+
+        # تبويب البحث الشامل
+        with exec_tab3:
+            st.subheader("البحث الشامل في قاعدة البيانات الفورية")
             exec_search = st.text_input("ابحث بالاسم أو رقم التعريف الوطني أو الفرع:")
             if exec_search:
                 res_s1 = supabase.table("employees").select("*").ilike("full_name", f"%{exec_search}%").execute()
@@ -208,15 +307,16 @@ if is_owner:
                         st.markdown(f"""
                         <div class="employee-card">
                             <span class="branch-badge">🏢 مكان العمل: {b_name}</span>
-                            <h3 style="color: #1e3a8a; margin-top: 5px; margin-bottom: 10px;">👤 {emp.get('full_name')}</h3>
-                            <p style="margin: 4px 0; color: #334155;"><b>رقم التعريف الوطني (NIN):</b> {emp.get('employee_number')}</p>
-                            <p style="margin: 4px 0; color: #0f172a; background-color: #f1f5f9; padding: 10px; border-radius: 6px;"><b>الملاحظات والبيانات:</b><br>{emp.get('notes') or 'لا توجد ملاحظات'}</p>
+                            <h3 style="color: #1e3a8a; margin-top: 4px; margin-bottom: 6px; font-weight: 700;">👤 {emp.get('full_name')}</h3>
+                            <p style="margin: 3px 0; color: #475569;"><b>رقم التعريف الوطني (NIN):</b> {emp.get('employee_number')}</p>
+                            <p style="margin: 3px 0; color: #0f172a; background-color: #f8fafc; padding: 10px; border-radius: 6px;"><b>الملاحظات والبيانات:</b><br>{emp.get('notes') or 'لا توجد ملاحظات'}</p>
                         </div>
                         """, unsafe_allow_html=True)
                 else:
                     st.info("لا توجد نتائج مطابقة لبحثك.")
 
-        with exec_tab3:
+        # تبويب الحذف والإشراف
+        with exec_tab4:
             st.subheader("إدارة وحذف السجلات الخاطئة أو التجريبية")
             st.warning("⚠️ تنبيه إداري: عملية الحذف نهائية ولا يمكن التراجع عنها.")
             
@@ -280,9 +380,9 @@ else:
                         st.markdown(f"""
                         <div class="employee-card">
                             <span class="branch-badge">🏢 مكان العمل السابق: {b_name}</span>
-                            <h3 style="color: #1e3a8a; margin-top: 5px; margin-bottom: 10px;">👤 {emp.get('full_name')}</h3>
-                            <p style="margin: 4px 0; color: #334155;"><b>رقم التعريف الوطني (NIN):</b> {emp.get('employee_number')}</p>
-                            <p style="margin: 4px 0; color: #0f172a; background-color: #f1f5f9; padding: 10px; border-radius: 6px;"><b>تفاصيل السجل والملاحظات:</b><br>{emp.get('notes') or 'لا توجد ملاحظات'}</p>
+                            <h3 style="color: #1e3a8a; margin-top: 4px; margin-bottom: 6px; font-weight: 700;">👤 {emp.get('full_name')}</h3>
+                            <p style="margin: 3px 0; color: #475569;"><b>رقم التعريف الوطني (NIN):</b> {emp.get('employee_number')}</p>
+                            <p style="margin: 3px 0; color: #0f172a; background-color: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #f1f5f9;"><b>تفاصيل السجل والملاحظات:</b><br>{emp.get('notes') or 'لا توجد ملاحظات'}</p>
                         </div>
                         """, unsafe_allow_html=True)
                 else:
@@ -290,7 +390,7 @@ else:
             except Exception as e:
                 st.error(f"حدث خطأ أثناء البحث: {e}")
 
-    # التبويب الثاني: تسجيل موظف جديد (الملاحظات اختيارية)
+    # التبويب الثاني: تسجيل موظف جديد
     with tab2:
         st.subheader(f"تسجيل بيانات موظف جديد - فرع {branch_name}")
         st.write("📌 **تنبيه:** الحقول المتبوعة بـ (*) إجبارية. الملاحظات اختيارية.")
